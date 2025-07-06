@@ -1,0 +1,45 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build web app
+      run: npm run build
+
+    - name: Install Capacitor
+      run: npm install @capacitor/core @capacitor/cli
+
+    - name: Initialize Capacitor
+      run: npx cap init "Food Calorie Tracker" "com.sparsh.foodtracker" --web-dir=dist
+
+    - name: Add Android platform
+      run: npx cap add android || echo "Android platform already added"
+
+    - name: Copy web assets
+      run: npx cap copy android
+
+    - name: Build APK via Gradle
+      working-directory: android
+      run: ./gradlew assembleRelease
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: Food-Calorie-Tracker-APK
+        path: android/app/build/outputs/apk/release/*.apk
